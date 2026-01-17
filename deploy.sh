@@ -14,8 +14,24 @@ if [ "$SERVER_PUBLIC_IP" == "YOUR_SERVER_IP" ]; then
     exit 1
 fi
 
+# --- SSH Key Setup ---
+SSH_KEY_PATH="$HOME/.ssh/id_rsa"
+if [ ! -f "$SSH_KEY_PATH" ]; then
+    echo "SSH key not found. Generating a new one..."
+    ssh-keygen -t rsa -b 4096 -f "$SSH_KEY_PATH" -N ""
+fi
+
+# Check if ssh-copy-id is installed
+if ! [ -x "$(command -v ssh-copy-id)" ]; then
+    echo 'Error: ssh-copy-id is not installed. Please install it to continue.' >&2
+    exit 1
+fi
+
+echo "Copying SSH public key to the server. You may be asked for the password."
+ssh-copy-id -p "$SSH_PORT" "$REMOTE_USER@$SERVER_PUBLIC_IP"
+
 # SSH command to run on the remote server
-SSH_CMD="ssh -p $SSH_PORT $REMOTE_USER@$SERVER_PUBLIC_IP"
+SSH_CMD="ssh -p $SSH_PORT -i $SSH_KEY_PATH $REMOTE_USER@$SERVER_PUBLIC_IP"
 
 # Commands to be executed on the remote server
 REMOTE_SCRIPT=$(cat <<EOF
@@ -67,4 +83,5 @@ $SSH_CMD "$REMOTE_SCRIPT"
 chmod +x manage-user.sh 2>/dev/null
 
 echo "Deployment script finished."
-
+echo "Passwordless SSH has been set up for future connections."
+echo "You can now use ./manage-user.sh without a password."
