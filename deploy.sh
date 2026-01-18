@@ -51,7 +51,9 @@ $( [ -n "$SERVER_WG_IPV6" ] && echo "Address = $SERVER_WG_IPV6" )
 SaveConfig = true
 PrivateKey = \$(cat /etc/wireguard/privatekey)
 ListenPort = $SERVER_WG_PORT
-PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -t nat -A POSTROUTING -o $SERVER_PUBLIC_NIC -j MASQUERADE
+PostUp = iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+PostUp = iptables -A FORWARD -i %i -j ACCEPT
+PostUp = iptables -t nat -A POSTROUTING -o $SERVER_PUBLIC_NIC -j MASQUERADE
 $( [ -n "$SERVER_WG_IPV6" ] && echo "PostUp = ip6tables -A FORWARD -i %i -j ACCEPT; ip6tables -t nat -A POSTROUTING -o $SERVER_PUBLIC_NIC -j MASQUERADE" )
 PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -t nat -D POSTROUTING -o $SERVER_PUBLIC_NIC -j MASQUERADE
 $( [ -n "$SERVER_WG_IPV6" ] && echo "PostDown = ip6tables -D FORWARD -i %i -j ACCEPT; ip6tables -t nat -D POSTROUTING -o $SERVER_PUBLIC_NIC -j MASQUERADE" )
@@ -64,7 +66,8 @@ sysctl -p
 
 # Start and enable WireGuard
 systemctl enable wg-quick@$SERVER_WG_NIC
-systemctl start wg-quick@$SERVER_WG_NIC
+systemctl restart wg-quick@$SERVER_WG_NIC
+wg-quick save $SERVER_WG_NIC
 
 # Open WireGuard UDP port in iptables
 iptables -A INPUT -i $SERVER_PUBLIC_NIC -p udp --dport $SERVER_WG_PORT -j ACCEPT
