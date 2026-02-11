@@ -2,6 +2,8 @@
 
 This repository contains a set of scripts to easily deploy and manage a WireGuard VPN server on a Linux VPS.
 
+It is guaranteed to work if you push/download the folder directly to the VPS and run the scripts on the server itself.
+
 ## Prerequisites
 
 *   A Linux VPS (tested on Debian/Ubuntu).
